@@ -57,4 +57,4 @@ if args.verbose:
     print("Response tokens:", response.usage.completion_tokens)
 
 
-print(message.content)
+print(message.content or "Agent finished without producing a final response.")
