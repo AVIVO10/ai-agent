@@ -1,6 +1,7 @@
 import argparse
 import os
 import json
+import sys
 from dotenv import load_dotenv
 from openai import OpenAI
 from prompts import system_prompt
@@ -28,28 +29,32 @@ messages = [
 ]
 
 
-response = client.chat.completions.create(
-    model="openrouter/free",
-    messages=messages,
-    tools=available_functions,
-)
+for i in range(20):
+    response = client.chat.completions.create(
+        model="openrouter/free",
+        messages=messages,
+        tools=available_functions,
+        )
+    if response.usage is None:
+        raise RuntimeError("API response did not include usage metadata")
 
-if response.usage is None:
-    raise RuntimeError("API response did not include usage metadata")
-
+    message = response.choices[0].message
+    messages.append(message)
+    if message.tool_calls:
+        for tool_call in message.tool_calls:
+            result_message = call_function(tool_call, args.verbose)
+            if args.verbose:
+                print(f"-> {result_message['content']}")
+            messages.append(result_message)
+    else:
+        break
+else:
+    print("AGENT DIDN'T FINISH TASK WITHIN 20 TRIES, RIP")
+    sys.exit(1)
 if args.verbose:
     print("User prompt:", args.user_prompt)
     print("Prompt tokens:", response.usage.prompt_tokens)
     print("Response tokens:", response.usage.completion_tokens)
 
-message = response.choices[0].message
-
-if message.tool_calls:
-    for tool_call in message.tool_calls:
-        function_args = json.loads(tool_call.function.arguments or "{}")
-        result_message = call_function(tool_call=tool_call)
-    
-if args.verbose:
-    print(f"-> {result_message['content']}")
 
 print(message.content)
