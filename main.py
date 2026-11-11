@@ -4,7 +4,7 @@ import json
 from dotenv import load_dotenv
 from openai import OpenAI
 from prompts import system_prompt
-from call_function import available_functions
+from call_function import available_functions, call_function
 
 load_dotenv()
 api_key = os.environ.get("OPENROUTER_API_KEY")
@@ -47,6 +47,9 @@ message = response.choices[0].message
 if message.tool_calls:
     for tool_call in message.tool_calls:
         function_args = json.loads(tool_call.function.arguments or "{}")
-        print(f"Calling function: {tool_call.function.name}({function_args})")
-else:
-    print(message.content)
+        result_message = call_function(tool_call=tool_call)
+    
+if args.verbose:
+    print(f"-> {result_message['content']}")
+
+print(message.content)

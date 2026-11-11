@@ -1,6 +1,32 @@
 import os
 import subprocess
 
+schema_run_python_file = {
+    "type": "function",
+    "function": {
+        "name": "run_python_file",
+        "description":"Executes a Python file (.py) inside the working directory and returns its stdout, stderr, and exit status. Use this when the user asks to run or execute a Python script.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "The file name and optional relative directory path of the file to run.",
+                },
+                "args": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                    },
+                    "description": "optional arguments for the file",
+                },
+            },
+            "required": ["file_path"],
+        },
+    },
+}
+
+
 def run_python_file(working_directory: str, file_path: str, args: list[str] | None = None) -> str:
     try:
         abs_working_dir = os.path.abspath(working_directory)
